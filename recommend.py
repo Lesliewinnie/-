@@ -16,11 +16,13 @@ def split(x):
             key2index[key] = len(key2index) + 1
     return list(map(lambda x: key2index[x], key_ans))
 
-data = pd.read_excel("C:/Users/admin/Desktop/1.xlsx")
+'''data = pd.read_excel("C:/Users/admin/Desktop/1.xlsx")
 resume= pd.read_excel("C:/Users/admin/Desktop/resume_new.xlsx")
-job= pd.read_excel("C:/Users/admin/Desktop/job_new1.xlsx")
+job= pd.read_excel("C:/Users/admin/Desktop/job_new1.xlsx")'''
+data=load_data_from_excel("C:/Users/admin/Desktop/1.xlsx")
+resume=load_resume_from_excel("C:/Users/admin/Desktop/resume_new.xlsx")
+job=load_job_from_excel("C:/Users/admin/Desktop/job_new1.xlsx"")
 job.columns=['id','company_id','release_time','job_posting_line','work_exp','edu_exp','job_nature','min_salary','max_salary','position_labels','job_description','work_place','online_state','job_name']
-#data1 = pd.read_excel("C:/Users/admin/Documents/2.xlsx")
 all_column=list(range(len(data.columns.values)))
 #max1=max(data["prof_skill_id"].values)
 max2=max(data["project_exp_id"].values)
@@ -61,7 +63,6 @@ for i in ["skill"]:
    # print(i)
 #for i in dense_features:
  #   data[i]=list(map(embedding,list(data[i].values)))
-print("hhhhhhhhhhh")
 '''data[sparse_features] = data[sparse_features].fillna(0)
 print(data['hobby'])
 data[dense_features] = data[dense_features].fillna([0])'''
@@ -79,50 +80,25 @@ fixlen_feature_columns = [SparseFeat(feat, data[feat].nunique())
 varlen_feature_columns=[]
 varlen_input = []
 for feat in dense_features:
-    '''genres_list=list(data[feat].values)
-    genres_length = np.array(list(map(len, genres_list)))
-    max_len = max(genres_length)
-    genres_list = pad_sequences(genres_list, maxlen=max_len, padding='post', )'''
-#    varlen_feature_columns=varlen_feature_columns+[VarLenSparseFeat(feat, len(
-    #data[feat].values) + 1, max_len, 'mean')]
     varlen_input=varlen_input+[data[feat]]
-print("hhhhhhhhhhh")
-print(type(varlen_input))
-print(type(data[feat]))
-print("hhhhhhhhhhh")
 #data['skill']=genres_list.copy()
 # 2.count #unique features for each sparse field and generate feature config for sequence feature
 #varlen_feature_columns2 = [VarLenSparseFeat(feat, len(data[feat].values)+1,max(np.array(list(map(len, data[feat].values)))))
                     #for feat in dense_features]  # Notice : value 0 is for padding for sequence input feature
-    
-
 linear_feature_columns = fixlen_feature_columns + varlen_feature_columns
 dnn_feature_columns = fixlen_feature_columns + varlen_feature_columns
 fixlen_feature_names = get_fixlen_feature_names(linear_feature_columns + dnn_feature_columns)
-#varlen_feature_names = get_varlen_feature_names(linear_feature_columns+dnn_feature_columns)
-print(fixlen_feature_names)
-#print(varlen_feature_names)
 
 # 3.generate input data for model
 fixlen_input = [data[name].values for name in fixlen_feature_names]
-print(fixlen_input) 
-#varlen_input = [genres_list] + [data[name].values for name in varlen_feature_names]
-#print(data['skill'].values)
 model_input = fixlen_input + varlen_input # make sure the order is right
-#fixlen_input1 = [data1[name].values for name in fixlen_feature_names]
 varlen_feature_names=dense_features
-#varlen_input1=[data1[name].values for name in varlen_feature_names]
-#model_input1 = fixlen_input1 + varlen_input1
 
 # 4.Define Model,compile and train
 model = DeepFM(linear_feature_columns,dnn_feature_columns,task='regression')
 model.compile("adam", "mse", metrics=['mse'], )
 history = model.fit(model_input, data[target].values,
                     batch_size=256, epochs=10, verbose=2, validation_split=0.2, )
-#pred_ans = model.predict(model_input, batch_size=256)
-#print(pred_ans)
-#print("test MSE", round(mean_squared_error(
-       # test[target].values, pred_ans), 4))
 
 choose=input("Recommend resumes for jobs: input 0,else input 1:")
 if(choose=='0'):
@@ -165,16 +141,3 @@ elif(choose=='1'):
     for i in range(0,len(result)):
         code.append(result[i][0])
     print(code)
-'''train, test = train_test_split(data, test_size=0.2)
-train_model_input = [train[name] for name in feature_names]
-
-test_model_input = [test[name] for name in feature_names]
-
-
-model = DeepFM(linear_feature_columns,dnn_feature_columns,task='binary')
-model.compile("adam", "binary_crossentropy",
-              metrics=['binary_crossentropy'], )
-
-history = model.fit(train_model_input, train[target].values,
-                    batch_size=256, epochs=10, verbose=2, validation_split=0.2, )
-pred_ans = model.predict(test_model_input, batch_size=256)'''
