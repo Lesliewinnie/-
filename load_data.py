@@ -22,6 +22,10 @@ def load_resume_from_service():
     resume = json.loads(res)['content']
     print(resume)
 
+    # 这边你自己把结构调成你要的frame最后return
+
+    return None
+
 
 # 职位数据过多，直接查库
 def load_job_from_mysql():
@@ -44,5 +48,5 @@ def load_job_from_mysql():
     return None
 
 if __name__ == '__main__':
-    # load_job_from_mysql()
-    load_resume_from_service()
+    load_job_from_mysql()
+    # load_resume_from_service()
