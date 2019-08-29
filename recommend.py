@@ -7,7 +7,7 @@ from tensorflow.python.keras.preprocessing.sequence import pad_sequences
 from deepctr.models import DeepFM
 from deepctr.inputs import SparseFeat, VarLenSparseFeat,get_fixlen_feature_names,get_varlen_feature_names
 from bert_serving.client import BertClient
-bc=BertClient()
+bc=BertClient()#使用bert时需要下载中文训练文件，并打开cmd运行
 def split(x):
     key_ans = x.split('|')
     for key in key_ans:
@@ -19,16 +19,17 @@ def split(x):
 '''data = pd.read_excel("C:/Users/admin/Desktop/1.xlsx")
 resume= pd.read_excel("C:/Users/admin/Desktop/resume_new.xlsx")
 job= pd.read_excel("C:/Users/admin/Desktop/job_new1.xlsx")'''
-data=load_data_from_excel("C:/Users/admin/Desktop/1.xlsx")
-resume=load_resume_from_excel("C:/Users/admin/Desktop/resume_new.xlsx")
-job=load_job_from_excel("C:/Users/admin/Desktop/job_new1.xlsx")
-job.columns=['id','company_id','release_time','job_posting_line','work_exp','edu_exp','job_nature','min_salary','max_salary','position_labels','job_description','work_place','online_state','job_name']
-all_column=list(range(len(data.columns.values)))
+training_data=load_data_from_excel("C:/Users/admin/Desktop/1.xlsx")#已标注的训练数据
+resume=load_resume_from_excel("C:/Users/admin/Desktop/resume_new.xlsx")#简历数据库
+job=load_job_from_excel("C:/Users/admin/Desktop/job_new1.xlsx")#职位数据库
+job.columns=['id','company_id','release_time','job_posting_line','work_exp','edu_exp','job_nature','min_salary',
+             'max_salary','position_labels','job_description','work_place','online_state','job_name']
+all_column=list(range(len(training_data.columns.values)))
 #max1=max(data["prof_skill_id"].values)
-max2=max(data["project_exp_id"].values)
-max3=max(data["school_exp_id"].values)
-max4=max(data["paper_id"].values)
-max5=max(data["working_exp_id"].values)
+max2=max(training_data["project_exp_id"].values)
+max3=max(training_data["school_exp_id"].values)
+max4=max(training_data["paper_id"].values)
+max5=max(training_data["working_exp_id"].values)
 sparse_features = ["project_exp_id","school_exp_id","paper_id","working_exp_id"]
 #dense_features=["job_description","job_name","self_description","expected_job","hobbies"]
 dense_features=["job_description","job_name","skill"]
@@ -52,10 +53,10 @@ target = ['label']
 # 1.Label Encoding for sparse features,and process sequence features
 for feat in sparse_features:
     lbe = LabelEncoder()
-    data[feat] = lbe.fit_transform(data[feat])
+    training_data[feat] = lbe.fit_transform(data[feat])
 # preprocess the sequence feature
 for i in dense_features:
-    data[i]=bc.encode(data[i].values.tolist()).tolist()
+    training_data[i]=bc.encode(training_data[i].values.tolist()).tolist()
 for i in ['job_description','job_name']:
     job[i]=bc.encode(job[i].tolist()).tolist()
 for i in ["skill"]:
@@ -75,12 +76,12 @@ max_len = max(genres_length)
 genres_list = pad_sequences(genres_list, maxlen=max_len, padding='post', )
 varlen_feature_columns = [VarLenSparseFeat('skill', len(
     key2index) + 1, max_len, 'mean')]  # Notice : value 0 is for padding for sequence input feature'''
-fixlen_feature_columns = [SparseFeat(feat, data[feat].nunique())
+fixlen_feature_columns = [SparseFeat(feat, training_data[feat].nunique())
                     for feat in sparse_features]
 varlen_feature_columns=[]
 varlen_input = []
 for feat in dense_features:
-    varlen_input=varlen_input+[data[feat]]
+    varlen_input=varlen_input+[training_data[feat]]
 #data['skill']=genres_list.copy()
 # 2.count #unique features for each sparse field and generate feature config for sequence feature
 #varlen_feature_columns2 = [VarLenSparseFeat(feat, len(data[feat].values)+1,max(np.array(list(map(len, data[feat].values)))))
@@ -90,18 +91,18 @@ dnn_feature_columns = fixlen_feature_columns + varlen_feature_columns
 fixlen_feature_names = get_fixlen_feature_names(linear_feature_columns + dnn_feature_columns)
 
 # 3.generate input data for model
-fixlen_input = [data[name].values for name in fixlen_feature_names]
+fixlen_input = [training_data[name].values for name in fixlen_feature_names]
 model_input = fixlen_input + varlen_input # make sure the order is right
 varlen_feature_names=dense_features
 
 # 4.Define Model,compile and train
 model = DeepFM(linear_feature_columns,dnn_feature_columns,task='regression')
 model.compile("adam", "mse", metrics=['mse'], )
-history = model.fit(model_input, data[target].values,
+history = model.fit(model_input, training_data[target].values,
                     batch_size=256, epochs=10, verbose=2, validation_split=0.2, )
 
 choose=input("Recommend resumes for jobs: input 0,else input 1:")
-if(choose=='0'):
+if(choose=='0'):#输入职位id，得到推荐的简历id
     job_id=input("Please input the job id:")
     for i in range(0,len(job)):
         if(job.iloc[i,0]==job_id):
@@ -122,7 +123,7 @@ if(choose=='0'):
     for i in range(0,len(result)):
         code.append(result[i][0])
     print(code)
-elif(choose=='1'):
+elif(choose=='1'):#输入简历id，得到推荐的职位id
     resume_id=input("Please input the resume id:")
     for i in range(0,len(resume)):
         if(str(resume.iloc[i,0])==resume_id):
