@@ -4,24 +4,19 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.python.keras.preprocessing.sequence import pad_sequences
 
+
 from deepctr.models import DeepFM
 from deepctr.inputs import SparseFeat, VarLenSparseFeat,get_fixlen_feature_names,get_varlen_feature_names
 from bert_serving.client import BertClient
-bc=BertClient()
-def split(x):
-    key_ans = x.split('|')
-    for key in key_ans:
-        if key not in key2index:
-            # Notice : input value 0 is a special "padding",so we do not use 0 to encode valid feature for sequence input
-            key2index[key] = len(key2index) + 1
-    return list(map(lambda x: key2index[x], key_ans))
 
-'''data = pd.read_excel("C:/Users/admin/Desktop/1.xlsx")
-resume= pd.read_excel("C:/Users/admin/Desktop/resume_new.xlsx")
-job= pd.read_excel("C:/Users/admin/Desktop/job_new1.xlsx")'''
-data=load_data_from_excel("C:/Users/admin/Desktop/1.xlsx")
-resume=load_resume_from_excel("C:/Users/admin/Desktop/resume_new.xlsx")
-job=load_job_from_excel("C:/Users/admin/Desktop/job_new1.xlsx")
+import load_data
+import utils
+
+bc=BertClient()
+data = load_data.load_data_from_excel()
+resume = load_data.load_resume_from_excel()
+job = load_data.load_job_from_excel()
+
 job.columns=['id','company_id','release_time','job_posting_line','work_exp','edu_exp','job_nature','min_salary','max_salary','position_labels','job_description','work_place','online_state','job_name']
 all_column=list(range(len(data.columns.values)))
 #max1=max(data["prof_skill_id"].values)
