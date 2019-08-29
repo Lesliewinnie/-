@@ -38,15 +38,14 @@ def load_job_from_mysql():
                    'position_labels', 'job_description', 'work_places', 'online_state', 'job_name'] # 读取到的字段顺序
     cursor.execute(sql)
     values  = cursor.fetchall()
-    print(values)
-
+    df=pd.DataFrame(list(values))
     # 这边你自己把value的结构调成你要的frame最后return
 
     cursor.close()
     connector.close()
 
-    return None
+    return df
 
-if __name__ == '__main__':
-    load_job_from_mysql()
+#if __name__ == '__main__':
+    #load_job_from_mysql()
     # load_resume_from_service()
