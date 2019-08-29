@@ -1,28 +1,22 @@
 import numpy as np
 #import Faker
+import load_data
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.python.keras.preprocessing.sequence import pad_sequences
 
-
 from deepctr.models import DeepFM
 from deepctr.inputs import SparseFeat, VarLenSparseFeat,get_fixlen_feature_names,get_varlen_feature_names
 from bert_serving.client import BertClient
-
-import load_data
-import utils
-
 bc=BertClient()
-training_data = load_data.load_data_from_excel()
-resume = load_data.load_resume_from_excel()
-job = load_data.load_job_from_excel()
 
+training_data = pd.read_excel("C:/Users/admin/Desktop/1.xlsx")#已标注的训练数据
+resume= pd.read_excel("C:/Users/admin/Desktop/resume_new.xlsx")#简历数据库
+#job= pd.read_excel("C:/Users/admin/Desktop/job_new1.xlsx")
+job=load_data.load_job_from_mysql()#职位数据库
 job.columns=['id','company_id','release_time','job_posting_line','work_exp','edu_exp','job_nature','min_salary','max_salary','position_labels','job_description','work_place','online_state','job_name']
-all_column=list(range(len(data.columns.values)))
-# training_data=load_data_from_excel("C:/Users/admin/Desktop/1.xlsx")#已标注的训练数据
-# resume=load_resume_from_excel("C:/Users/admin/Desktop/resume_new.xlsx")#简历数据库
-# job=load_job_from_excel("C:/Users/admin/Desktop/job_new1.xlsx")#职位数据库
-
+#data1 = pd.read_excel("C:/Users/admin/Documents/2.xlsx")
+all_column=list(range(len(training_data.columns.values)))
 #max1=max(data["prof_skill_id"].values)
 max2=max(training_data["project_exp_id"].values)
 max3=max(training_data["school_exp_id"].values)
@@ -51,7 +45,7 @@ target = ['label']
 # 1.Label Encoding for sparse features,and process sequence features
 for feat in sparse_features:
     lbe = LabelEncoder()
-    training_data[feat] = lbe.fit_transform(data[feat])
+    training_data[feat] = lbe.fit_transform(training_data[feat])
 # preprocess the sequence feature
 for i in dense_features:
     training_data[i]=bc.encode(training_data[i].values.tolist()).tolist()
@@ -62,28 +56,17 @@ for i in ["skill"]:
    # print(i)
 #for i in dense_features:
  #   data[i]=list(map(embedding,list(data[i].values)))
-'''data[sparse_features] = data[sparse_features].fillna(0)
-print(data['hobby'])
-data[dense_features] = data[dense_features].fillna([0])'''
-    
-'''key2index = {}
-genres_list = list(map(split, data['skill'].values))
-genres_length = np.array(list(map(len, genres_list)))
-max_len = max(genres_length)
-# Notice : padding=`post`
-genres_list = pad_sequences(genres_list, maxlen=max_len, padding='post', )
-varlen_feature_columns = [VarLenSparseFeat('skill', len(
-    key2index) + 1, max_len, 'mean')]  # Notice : value 0 is for padding for sequence input feature'''
 fixlen_feature_columns = [SparseFeat(feat, training_data[feat].nunique())
                     for feat in sparse_features]
 varlen_feature_columns=[]
 varlen_input = []
 for feat in dense_features:
     varlen_input=varlen_input+[training_data[feat]]
-#data['skill']=genres_list.copy()
 # 2.count #unique features for each sparse field and generate feature config for sequence feature
 #varlen_feature_columns2 = [VarLenSparseFeat(feat, len(data[feat].values)+1,max(np.array(list(map(len, data[feat].values)))))
                     #for feat in dense_features]  # Notice : value 0 is for padding for sequence input feature
+    
+
 linear_feature_columns = fixlen_feature_columns + varlen_feature_columns
 dnn_feature_columns = fixlen_feature_columns + varlen_feature_columns
 fixlen_feature_names = get_fixlen_feature_names(linear_feature_columns + dnn_feature_columns)
