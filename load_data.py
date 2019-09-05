@@ -46,6 +46,6 @@ def load_job_from_mysql():
 
     return df
 
-#if __name__ == '__main__':
-    #load_job_from_mysql()
-    # load_resume_from_service()
+if __name__ == '__main__':
+    # load_job_from_mysql()
+    load_resume_from_service()
