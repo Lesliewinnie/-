@@ -47,14 +47,14 @@ if __name__=='__main__':
         file_pdf_name=file_front_name+".pdf"
         doc2pdf_linux(file_name)
         file_new_name=file_front_name+".jpg"
-        with Image(filename=file_pdf_name,resolution=300) as img:
+        with Image(filename=file_pdf_name,resolution=250) as img:
             print(file_new_name)
             img.format = 'jpeg'
             img.save(filename=file_new_name)
     elif(file_extension==".pdf"):
         file_front_name=file_name.replace(file_extension,"")
         file_new_name=file_front_name+".jpg"
-        with Image(filename=file_name,resolution=300) as img:
+        with Image(filename=file_name,resolution=500) as img:
             print(file_new_name)
             img.format = 'jpeg'
             img.save(filename=file_new_name)
@@ -75,13 +75,14 @@ if __name__=='__main__':
         
     NER_URL = 'http://api.bosonnlp.com/ner/analysis'
     s = [txt]
+    print(txt)
     data = json.dumps(s)
     headers = {
         'X-Token': 'GL_Oid70.36196.LUKOU-IIInuw',
         'Content-Type': 'application/json'
         }
     resp = requests.post(NER_URL, headers=headers, data=data.encode('utf-8'))
-    regex = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-])"
+    regex = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+)"
     email = re.findall(regex, txt)#获取emial
     if(email==[]):
         email=""
@@ -110,6 +111,8 @@ if __name__=='__main__':
                     exp_job=''.join(item['word'][entity[0]:entity[1]])
                     flag=1
                     break
+    if(flag==0):
+        exp_job=""
 
     flag=0
     regex=r"((期望|理想|目标|意向)(工作地点|工作地址|工作城市|地点|地址|城市))"#获取目标地点
@@ -138,10 +141,12 @@ if __name__=='__main__':
         for entity in item['entity']:
             if((entity[2]=="person_name")&(count_name==0)):
                 count_name=1
-                print("name:",''.join(item['word'][entity[0]:entity[1]]))
+                name=''.join(item['word'][entity[0]:entity[1]])
+                #print("name:",''.join(item['word'][entity[0]:entity[1]]))
             elif((entity[2]=="org_name")&(count_school==0)):
                 count_school=1
-                print("school:",''.join(item['word'][entity[0]:entity[1]]))
+                school=''.join(item['word'][entity[0]:entity[1]])
+                #print("school:",''.join(item['word'][entity[0]:entity[1]]))
             if(count_name==1&count_school):
                 break
     dic={"name":name,"school":school,"email":email,"phoneNumber":phoneNumber,"exp_job":exp_job,"exp_location":exp_location}
