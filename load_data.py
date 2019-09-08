@@ -20,11 +20,9 @@ def load_job_from_excel():
 def load_resume_from_service():
     res = eureka_client.do_service("ZUUL", "/api/resumeservice/resume/getAllResume")
     resume = json.loads(res)['content']
-    print(resume)
-
+    df=pd.DataFrame(list(resume))
     # 这边你自己把结构调成你要的frame最后return
-
-    return None
+    return df
 
 
 # 职位数据过多，直接查库
@@ -43,9 +41,9 @@ def load_job_from_mysql():
 
     cursor.close()
     connector.close()
-
     return df
+    
 
 if __name__ == '__main__':
-    # load_job_from_mysql()
-    load_resume_from_service()
+    load_job_from_mysql()
+    #load_resume_from_service()
