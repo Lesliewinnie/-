@@ -2,15 +2,15 @@ import numpy as np
 #import Faker
 import load_data
 import pandas as pd
-#import pickle
+import pickle
 from sklearn.preprocessing import LabelEncoder
-#from sklearn.externals import joblib
+from sklearn.externals import joblib
 from tensorflow.python.keras.preprocessing.sequence import pad_sequences
 
 from deepctr.models import DeepFM
 from deepctr.inputs import SparseFeat, VarLenSparseFeat,get_fixlen_feature_names,get_varlen_feature_names
 from bert_serving.client import BertClient
-#from keras.models import load_model
+from keras.models import load_model
 bc=BertClient()
 
 def recommend_resume2job(job_id):#输入职位id，得到推荐的简历id
@@ -22,7 +22,7 @@ def recommend_resume2job(job_id):#输入职位id，得到推荐的简历id
             break
     result=[]
     for i in range(0,len(resume)):
-        if((len(resume.loc[i,['workingExperiences']].values[0])>=temp.values[4])&
+        if((resume.loc[i,['educationExperiences']].values[0][0]['qualification']>=temp.values[5])&##########################
            (resume.loc[i,['basicInfo']].values[0]['expectedLocation'] in str(temp.values[-3]))):
             test_input=[np.array([temp.values[4]]),np.array([len(resume.loc[i,['workingExperiences']].values[0])]),
                         pd.Series(resume.loc[i,['basicInfo']].values[0]['expectedJob']),
@@ -43,7 +43,7 @@ def recommend_job2resume(resume_id):#输入简历id，得到推荐的职位id
             break                
     result=[]
     for i in range(0,len(job)):
-        if((len(temp['workingExperiences'])>=job.iloc[i,4])
+        if((temp['educationExperiences'][0]['qualification']>=job.iloc[i,5])##########################
            &(temp['basicInfo']['expectedLocation'] in job.loc[i,'work_place'])):
             
             test_input=[np.array([job.iloc[i,4]]),np.array([len(temp['workingExperiences'])]),
@@ -88,8 +88,11 @@ for i in range(len(resume)):
 for i in range(0,len(resume)):
     if(len(resume.loc[i,'educationExperiences'])==0):
         resume.loc[i,'educationExperiences']=[{'qualification':0,'profession':[0]*768}]
-    elif((resume.loc[i,'educationExperiences'][0]["profession"]==None)):
-        resume.loc[i,'educationExperiences'][0]["profession"]=[0]*768
+    elif((resume.loc[i,'educationExperiences'][0]["profession"]==None)|(resume.loc[i,'educationExperiences'][0]["qualification"]==None)):##########################
+        if(resume.loc[i,'educationExperiences'][0]["profession"]==None):##########################
+            resume.loc[i,'educationExperiences'][0]["profession"]=[0]*768##########################
+        if(resume.loc[i,'educationExperiences'][0]["qualification"]==None):##########################
+            resume.loc[i,'educationExperiences'][0]["qualification"]=0##########################
     else:
         resume.loc[i,'educationExperiences'][0]["profession"]=bc.encode([resume.loc[i,'educationExperiences'][0]["profession"]]).tolist()
     if (resume.loc[i,'basicInfo']['expectedJob']==None):
@@ -133,5 +136,5 @@ history = model.fit(model_input, training_data[target].values,
                   batch_size=256, epochs=10, verbose=2, validation_split=0.2, )
 #model.save(r"C:\Users\admin\Desktop\--master\model\model.h5")
 #示例
-result=recommend_job2resume("ee78547d-94a3-4b29-9db6-4c2d7019f32f")
+result=recommend_resume2job("20b471a1-c313-11e9-993d-525400f23a3f")
 print(result)
